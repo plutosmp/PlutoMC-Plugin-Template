@@ -1,2 +1,3 @@
 # PlutoMC-Plugin-Template
-plugin template repository
+
+Plugin template repository.
