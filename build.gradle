@@ -77,8 +77,9 @@ def static processJar(String pluginYmlPath, String oldPath, String newPath) {
                 jos.putNextEntry(entry)
                 if (entry.getName() == "plugin.yml") {
                     jos.write(Files.readAllBytes(pluginInfo.toPath()))
+                } else {
+                    jos.write(is.readAllBytes())
                 }
-                jos.write(is.readAllBytes())
                 jos.closeEntry()
             } catch (IOException e) {
                 e.printStackTrace()
