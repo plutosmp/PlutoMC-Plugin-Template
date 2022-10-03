@@ -52,7 +52,6 @@ build {
                 if (!f.getName().endsWith(".jar"))
                     continue
                 String fileName = "${buildDir}/libs" + "/" + f.getName()
-                println(fileName)
                 processJar("${buildDir}/classes/java/main/plugin.yml", fileName, fileName.substring(0, fileName.length() - 4) + "-replaced.jar")
             }
         }
