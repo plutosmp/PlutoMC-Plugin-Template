@@ -14,8 +14,8 @@ import org.bukkit.plugin.java.annotation.plugin.author.Authors;
         @Author("PlutoMC"),
         @Author("DeeChael")
 })
-@Website("plutomc.top")
-@Description("PlutoMC template plugin by DeeChael")
+@Website("${website}")
+@Description("${description}")
 public final class TemplatePlugin extends JavaPlugin {
 
     @Override
@@ -29,7 +29,7 @@ public final class TemplatePlugin extends JavaPlugin {
     }
 
     public static TemplatePlugin getInstance() {
-        return JavaPlugin.getPlugin(TemplatePlugin.class);
+        return getPlugin(TemplatePlugin.class);
     }
 
 }

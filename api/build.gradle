@@ -1,0 +1,103 @@
+plugins {
+    id 'java'
+    id 'maven-publish'
+    id 'signing'
+}
+
+group 'top.plutomc'
+version plugin_version
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+}
+
+
+dependencies {
+    compileOnly "io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT"
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+    withJavadocJar()
+    withSourcesJar()
+}
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            groupId = group
+            artifactId = 'api'
+            version = plugin_version
+
+            from components.java
+
+            pom {
+                name = plugin_display_name
+                description = plugin_description
+                url = plugin_git
+                licenses {
+                    license {
+                        name = 'MIT License'
+                        url = 'https://mit-license.org'
+                    }
+                }
+                developers {
+                    developer {
+                        id = 'deechael'
+                        name = 'DeeChael'
+                        email = 'DeeChael@outlook.com'
+                    }
+                    developer {
+                        id = 'plutosmp'
+                        name = 'Pluto SMP'
+                        email = 'yuu8583@proton.me'
+                    }
+                }
+                scm {
+                    connection = plugin_scm_git
+                    developerConnection = plugin_scm_ssh
+                    url = plugin_git
+                }
+            }
+        }
+        relocation(MavenPublication) {
+            pom {
+                groupId = group
+                artifactId = "api"
+                version = plugin_version
+
+                distributionManagement {
+                    relocation {
+                        groupId = group
+                        artifactId = plugin_name + "-api"
+                        version = plugin_version
+                        message = "Relocated artifact id"
+                    }
+                }
+            }
+        }
+    }
+
+    repositories {
+        maven {
+            name = 'maven_central_release'
+            url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.maven
+}
+
+javadoc {
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
+}

@@ -1,0 +1,97 @@
+import java.nio.file.Files
+import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+import java.util.regex.Pattern
+
+plugins {
+    id 'java'
+}
+
+group 'top.plutomc'
+version plugin_version
+
+repositories {
+    mavenCentral()
+    maven {
+        url "https://repo.papermc.io/repository/maven-public/"
+    }
+    maven {
+        url "https://hub.spigotmc.org/nexus/content/repositories/snapshots/"
+    }
+}
+
+
+dependencies {
+    implementation project(":api")
+    compileOnly "io.papermc.paper:paper-api:1.19.2-R0.1-SNAPSHOT"
+    compileOnly 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
+    annotationProcessor 'org.spigotmc:plugin-annotations:1.2.3-SNAPSHOT'
+}
+
+java {
+    toolchain.languageVersion.set(JavaLanguageVersion.of(17))
+}
+
+build {
+    doLast {
+        var plugin_raw_name = plugin_name
+        try {
+            if (!Pattern.compile("^[A-Za-z0-9 _.-]+\$").matcher(plugin_raw_name).matches()) {
+                throw new RuntimeException("name '" + plugin_raw_name + "' contains invalid characters.")
+            }
+            plugin_raw_name = plugin_raw_name.replace(' ', '_')
+        } catch (NullPointerException ex) {
+            throw new RuntimeException(ex, "name is not defined")
+        } catch (ClassCastException ex) {
+            throw new RuntimeException(ex, "name is of wrong type")
+        }
+        File pluginInfo = new File("${buildDir}/classes/java/main/plugin.yml")
+        replaceText(pluginInfo, 'name', plugin_raw_name)
+        replaceText(pluginInfo, 'version', plugin_version)
+        replaceText(pluginInfo, 'website', plugin_git)
+        replaceText(pluginInfo, 'description', plugin_description)
+        File[] jars = new File("${buildDir}/libs").listFiles()
+        if (jars != null) {
+            for (File f : jars) {
+                if (!f.getName().endsWith(".jar"))
+                    continue
+                String fileName = "${buildDir}/libs" + "/" + f.getName()
+                processJar("${buildDir}/classes/java/main/plugin.yml", fileName, fileName.substring(0, fileName.length() - 4) + "-replaced.jar")
+            }
+        }
+    }
+}
+
+def static replaceText(File file, String key, String value) {
+    def fileText = file.text
+    def regex = '\\$\\{' + key + '\\}'
+    fileText = (fileText =~ /${regex}/).replaceAll(value)
+    file.write(fileText)
+}
+
+def static processJar(String pluginYmlPath, String oldPath, String newPath) {
+    File pluginInfo = new File(pluginYmlPath)
+    try (
+            JarFile jarFile = new JarFile(oldPath)
+            JarOutputStream jos = new JarOutputStream(new FileOutputStream(newPath))
+    ) {
+        jarFile.stream().forEach(entry -> {
+            try (InputStream is = jarFile.getInputStream(entry)) {
+                jos.putNextEntry(entry)
+                if (entry.getName() == "plugin.yml") {
+                    jos.write(Files.readAllBytes(pluginInfo.toPath()))
+                } else {
+                    jos.write(is.readAllBytes())
+                }
+                jos.closeEntry()
+            } catch (IOException e) {
+                e.printStackTrace()
+            }
+        });
+        jos.finish()
+        jos.close()
+        jarFile.close()
+    } catch (IOException e) {
+        e.printStackTrace()
+    }
+}
