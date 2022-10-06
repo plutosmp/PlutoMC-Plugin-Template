@@ -1,3 +1,5 @@
+import java.nio.file.Files
+
 plugins {
     id 'java'
     id 'maven-publish'
@@ -30,9 +32,9 @@ java {
 
 publishing {
     publications {
-        maven(MavenPublication) {
+        mavenJava(MavenPublication) {
             groupId = group
-            artifactId = 'api'
+            artifactId = plugin_name + "-api"
             version = plugin_version
 
             from components.java
@@ -66,26 +68,15 @@ publishing {
                 }
             }
         }
-        relocation(MavenPublication) {
-            pom {
-                groupId = group
-                artifactId = "api"
-                version = plugin_version
-
-                distributionManagement {
-                    relocation {
-                        groupId = group
-                        artifactId = plugin_name + "-api"
-                        version = plugin_version
-                        message = "Relocated artifact id"
-                    }
-                }
-            }
-        }
     }
 
     repositories {
         maven {
+            var ENV = System.getenv()
+            credentials {
+                username = ENV.get(ossrh_username_system_path)
+                password = ENV.get(ossrh_password_system_path)
+            }
             name = 'maven_central_release'
             url = 'https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/'
         }
@@ -93,10 +84,16 @@ publishing {
 }
 
 signing {
-    sign publishing.publications.maven
+    var ENV = System.getenv()
+    var key = ENV.get(signing_key_base64_system_path)
+    var password = ENV.get(signing_password_system_path)
+    // useInMemoryPgpKeys(String.join("\n", Files.readAllLines(new File(key).toPath())), password)
+    // If you want to publish, make the line above not a comment but a line of codes
+    sign publishing.publications.mavenJava
 }
 
 javadoc {
+    options.addStringOption("charset", "UTF-8")
     if(JavaVersion.current().isJava9Compatible()) {
         options.addBooleanOption('html5', true)
     }

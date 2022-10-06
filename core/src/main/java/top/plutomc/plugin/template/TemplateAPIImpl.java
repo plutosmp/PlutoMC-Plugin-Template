@@ -7,4 +7,5 @@ public class TemplateAPIImpl implements TemplateAPI {
     public void doSth() {
 
     }
+
 }
